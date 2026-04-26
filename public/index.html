@@ -645,7 +645,10 @@
                     <h3>Apply Payment To:</h3>
                     <div id="paymentOptionsContainer"></div>
                 </div>
-                <button onclick="applyPaymentToDebts()">Log Payment</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="applyPaymentToDebts()" style="flex: 1;">Log Payment</button>
+                    <button onclick="payAllDebts()" style="flex: 1; background: #27ae60;">Pay All</button>
+                </div>
             </div>
 
             <!-- Debtor Actions -->
@@ -1045,6 +1048,52 @@
                 viewDebtor(currentDebtorId);
             } catch (err) {
                 alert('Error adding debt: ' + err.message);
+            }
+        }
+
+        async function payAllDebts() {
+            const debtor = debtors.find(d => d.id === currentDebtorId);
+            if (!debtor || debtor.debts.length === 0) {
+                alert('No debts to pay');
+                return;
+            }
+
+            const totalRemaining = debtor.debts.reduce((sum, d) => sum + d.remaining, 0);
+            
+            if (totalRemaining <= 0) {
+                alert('All debts are already paid!');
+                return;
+            }
+
+            if (!confirm(`Pay all remaining debts? Total: $${totalRemaining.toFixed(2)}`)) {
+                return;
+            }
+
+            try {
+                for (const debt of debtor.debts) {
+                    if (debt.remaining > 0) {
+                        const response = await fetch(`${API_URL}/payments`, {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${authToken}`
+                            },
+                            body: JSON.stringify({ debt_id: debt.id, amount: debt.remaining })
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.error || 'Failed to log payment');
+                        }
+                    }
+                }
+
+                alert(`✓ All debts paid! Total: $${totalRemaining.toFixed(2)}`);
+                document.getElementById('logPaymentAmount').value = '';
+                await loadDebtors();
+                viewDebtor(currentDebtorId);
+            } catch (err) {
+                alert('Error paying all debts: ' + err.message);
             }
         }
 
