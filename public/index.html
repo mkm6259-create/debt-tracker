@@ -1003,12 +1003,20 @@
                     body: JSON.stringify({ name, phone })
                 });
 
-                if (!response.ok) throw new Error('Failed to add debtor');
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to add debtor');
+                }
 
+                const result = await response.json();
+                console.log('Debtor added:', result);
+                
                 document.getElementById('debtorName').value = '';
                 document.getElementById('debtorPhone').value = '';
                 await loadDebtors();
+                alert(`Success! Debtor "${name}" added.`);
             } catch (err) {
+                console.error('Error adding debtor:', err);
                 alert('Error adding debtor: ' + err.message);
             }
         }
