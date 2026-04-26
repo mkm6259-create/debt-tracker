@@ -273,7 +273,7 @@ app.get('/api/debtors', verifyToken, (req, res) => {
 
             const debtsWithPayments = debts.map(debt => {
                 const payments = db.prepare(`
-                    SELECT amount, date FROM payments WHERE debt_id = ?
+                    SELECT amount, date, payment_method, notes FROM payments WHERE debt_id = ?
                 `).all(debt.id);
                 return { ...debt, payments };
             });
@@ -392,7 +392,7 @@ app.delete('/api/debts/:id', verifyToken, (req, res) => {
 // Add payment
 app.post('/api/payments', verifyToken, (req, res) => {
     try {
-        const { debt_id, amount } = req.body;
+        const { debt_id, amount, payment_method = 'cash', notes = '' } = req.body;
         const uuid = `payment_${Date.now()}`;
         const date = new Date().toLocaleDateString();
 
@@ -416,8 +416,8 @@ app.post('/api/payments', verifyToken, (req, res) => {
         }
 
         const paymentResult = db.prepare(
-            'INSERT INTO payments (uuid, debt_id, amount, date) VALUES (?, ?, ?, ?)'
-        ).run(uuid, debt_id, amount, date);
+            'INSERT INTO payments (uuid, debt_id, amount, date, payment_method, notes) VALUES (?, ?, ?, ?, ?, ?)'
+        ).run(uuid, debt_id, amount, date, payment_method, notes);
 
         const newRemaining = debt.remaining - amount;
         const newPaid = debt.paid + amount;

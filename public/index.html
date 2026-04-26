@@ -641,6 +641,20 @@
                     <label>Payment Amount</label>
                     <input type="number" id="logPaymentAmount" placeholder="0.00" step="0.01">
                 </div>
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <select id="paymentMethod" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="cash">💰 Cash</option>
+                        <option value="check">💳 Check</option>
+                        <option value="mobile">📱 Mobile Payment</option>
+                        <option value="bank">🏦 Bank Transfer</option>
+                        <option value="other">💵 Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Payment Notes (Optional)</label>
+                    <input type="text" id="paymentNotes" placeholder="e.g., Check #12345" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
                 <div class="payment-distribution" id="paymentDistributionDiv" style="display: none;">
                     <h3>Apply Payment To:</h3>
                     <div id="paymentOptionsContainer"></div>
@@ -926,7 +940,12 @@
                     ${debt.payments && debt.payments.length > 0 ? `
                         <div class="payment-history">
                             <strong>Payments:</strong>
-                            ${debt.payments.map(p => `<div class="payment-item"><span>${p.date}</span><span>$${p.amount.toFixed(2)}</span></div>`).join('')}
+                            ${debt.payments.map(p => `
+                                <div class="payment-item" style="margin-bottom: 8px; padding: 8px; background: #f9f9f9; border-radius: 4px;">
+                                    <div><strong>$${p.amount.toFixed(2)}</strong> via ${p.payment_method || 'cash'} on ${p.date}</div>
+                                    ${p.notes ? `<div style="font-size: 0.9em; color: #666; margin-top: 4px;">Note: ${p.notes}</div>` : ''}
+                                </div>
+                            `).join('')}
                         </div>
                     ` : ''}
 
@@ -1141,13 +1160,21 @@
             }
 
             try {
+                const paymentMethod = document.getElementById('paymentMethod').value;
+                const notes = document.getElementById('paymentNotes').value.trim();
+                
                 const response = await fetch(`${API_URL}/payments`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${authToken}`
                     },
-                    body: JSON.stringify({ debt_id: parseInt(selectedDebtId), amount })
+                    body: JSON.stringify({ 
+                        debt_id: parseInt(selectedDebtId), 
+                        amount,
+                        payment_method: paymentMethod,
+                        notes: notes
+                    })
                 });
 
                 if (!response.ok) {
@@ -1155,8 +1182,29 @@
                     throw new Error(errorData.error || 'Failed to log payment');
                 }
 
-                document.getElementById('logPaymentAmount').value = '';
+                // Get updated debtor info
                 await loadDebtors();
+                const debtor = debtors.find(d => d.id === currentDebtorId);
+                const remainingTotal = debtor.debts.reduce((sum, d) => sum + d.remaining, 0);
+                const paymentMethod = document.getElementById('paymentMethod').value;
+                const notes = document.getElementById('paymentNotes').value.trim();
+                
+                // Show detailed success message
+                let message = `✓ Payment Received\n\nAmount: $${amount.toFixed(2)}\nMethod: ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}`;
+                if (notes) message += `\nNotes: ${notes}`;
+                message += `\n\nRemaining Balance: $${remainingTotal.toFixed(2)}`;
+                if (remainingTotal === 0) message += `\n✓ All debts cleared!`;
+                
+                alert(message);
+                
+                // Send SMS notification
+                if (debtor && debtor.phone) {
+                    sendPaymentSms(debtor, amount, remainingTotal);
+                }
+                
+                document.getElementById('logPaymentAmount').value = '';
+                document.getElementById('paymentNotes').value = '';
+                document.getElementById('paymentMethod').value = 'cash';
                 viewDebtor(currentDebtorId);
             } catch (err) {
                 alert('Error logging payment: ' + err.message);
@@ -1326,6 +1374,32 @@
                 loadBackups();
             } catch (err) {
                 alert('Error creating backup: ' + err.message);
+            }
+        }
+
+        async function sendPaymentSms(debtor, amount, remainingBalance) {
+            try {
+                const message = `Payment received: $${amount.toFixed(2)}. Remaining balance: $${remainingBalance.toFixed(2)}. Thank you!`;
+                
+                const response = await fetch(`${API_URL}/sms/send`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ 
+                        phone: debtor.phone,
+                        message: message
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('SMS sent successfully');
+                } else {
+                    console.log('SMS sending failed, but payment was recorded');
+                }
+            } catch (err) {
+                console.log('Could not send SMS, but payment was recorded:', err.message);
             }
         }
     </script>
