@@ -11,6 +11,7 @@ RUN npm install --production
 # Copy application files
 COPY server.js .
 COPY debt_tracker.db ./
+COPY public ./public
 
 # Expose port
 EXPOSE 3001

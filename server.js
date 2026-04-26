@@ -17,13 +17,20 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 app.use(cors());
 app.use(bodyParser.json());
 
-// Serve static files (web app) - MUST be before API routes
+// Serve HTML directly from root
+app.get('/', (req, res) => {
+    const htmlPath = path.join(__dirname, 'public', 'index.html');
+    if (fs.existsSync(htmlPath)) {
+        res.sendFile(htmlPath);
+    } else {
+        res.status(404).send('App not found');
+    }
+});
+
+// Serve static files
 const publicPath = path.join(__dirname, 'public');
 if (fs.existsSync(publicPath)) {
     app.use(express.static(publicPath));
-    app.get('/', (req, res) => {
-        res.sendFile(path.join(publicPath, 'index.html'));
-    });
 }
 
 // Database setup
