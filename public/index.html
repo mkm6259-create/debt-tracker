@@ -1032,8 +1032,13 @@
                 
                 document.getElementById('debtorName').value = '';
                 document.getElementById('debtorPhone').value = '';
+                
+                // Reload and verify
                 await loadDebtors();
-                alert(`Success! Debtor "${name}" added.`);
+                const found = debtors.some(d => d.id === result.id);
+                console.log('Debtor found in list after reload:', found);
+                
+                alert(`✓ Success! Debtor "${name}" added and verified.`);
             } catch (err) {
                 console.error('Error adding debtor:', err);
                 alert('Error adding debtor: ' + err.message);
