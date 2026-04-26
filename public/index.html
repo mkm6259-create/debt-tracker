@@ -1088,9 +1088,20 @@
                     }
                 }
 
-                alert(`✓ All debts paid! Total: $${totalRemaining.toFixed(2)}`);
-                document.getElementById('logPaymentAmount').value = '';
                 await loadDebtors();
+                const updatedDebtor = debtors.find(d => d.id === currentDebtorId);
+                const remainingTotal = updatedDebtor.debts.reduce((sum, d) => sum + d.remaining, 0);
+                
+                let message = `✓ Taaj Transfer\n\nAmount Paid: $${totalRemaining.toFixed(2)}`;
+                
+                if (remainingTotal > 0) {
+                    message += `\n\nRemaining Balance: $${remainingTotal.toFixed(2)}`;
+                } else {
+                    message += `\n\n✓ All debts cleared!`;
+                }
+                
+                alert(message);
+                document.getElementById('logPaymentAmount').value = '';
                 viewDebtor(currentDebtorId);
             } catch (err) {
                 alert('Error paying all debts: ' + err.message);
