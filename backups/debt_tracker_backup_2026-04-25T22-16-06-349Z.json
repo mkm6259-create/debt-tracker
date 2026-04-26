@@ -1,0 +1,112 @@
+{
+  "timestamp": "2026-04-25T22:16:06.349Z",
+  "debtors": [
+    {
+      "id": 2,
+      "uuid": "debtor_1777148830956",
+      "name": "Moo",
+      "phone": "6127016195",
+      "created_at": "2026-04-25 20:27:10",
+      "user_id": 1
+    },
+    {
+      "id": 3,
+      "uuid": "debtor_1777149199204",
+      "name": "Calili",
+      "phone": "612555",
+      "created_at": "2026-04-25 20:33:19",
+      "user_id": 1
+    },
+    {
+      "id": 4,
+      "uuid": "debtor_1777155352147",
+      "name": "Yusuf",
+      "phone": "6124234243",
+      "created_at": "2026-04-25 22:15:52",
+      "user_id": 1
+    }
+  ],
+  "debts": [
+    {
+      "id": 2,
+      "uuid": "debt_1777148839598",
+      "debtor_id": 2,
+      "description": "taaj",
+      "amount": 100,
+      "paid": 100,
+      "remaining": 0,
+      "created_at": "2026-04-25 20:27:19",
+      "user_id": 1
+    },
+    {
+      "id": 3,
+      "uuid": "debt_1777149075717",
+      "debtor_id": 2,
+      "description": "Taaj",
+      "amount": 90,
+      "paid": 0,
+      "remaining": 90,
+      "created_at": "2026-04-25 20:31:15",
+      "user_id": 1
+    },
+    {
+      "id": 4,
+      "uuid": "debt_1777149212684",
+      "debtor_id": 3,
+      "description": "Taaj",
+      "amount": 50,
+      "paid": 25,
+      "remaining": 25,
+      "created_at": "2026-04-25 20:33:32",
+      "user_id": 1
+    },
+    {
+      "id": 5,
+      "uuid": "debt_1777149225917",
+      "debtor_id": 3,
+      "description": "Taaj",
+      "amount": 60,
+      "paid": 0,
+      "remaining": 60,
+      "created_at": "2026-04-25 20:33:45",
+      "user_id": 1
+    },
+    {
+      "id": 6,
+      "uuid": "debt_1777155366347",
+      "debtor_id": 4,
+      "description": "Food",
+      "amount": 60,
+      "paid": 0,
+      "remaining": 60,
+      "created_at": "2026-04-25 22:16:06",
+      "user_id": 1
+    }
+  ],
+  "payments": [
+    {
+      "id": 1,
+      "uuid": "payment_1777149035642",
+      "debt_id": 2,
+      "amount": 50,
+      "date": "4/25/2026",
+      "created_at": "2026-04-25 20:30:35"
+    },
+    {
+      "id": 2,
+      "uuid": "payment_1777149941958",
+      "debt_id": 2,
+      "amount": 50,
+      "date": "4/25/2026",
+      "created_at": "2026-04-25 20:45:41"
+    },
+    {
+      "id": 3,
+      "uuid": "payment_1777150301926",
+      "debt_id": 4,
+      "amount": 25,
+      "date": "4/25/2026",
+      "created_at": "2026-04-25 20:51:41"
+    }
+  ]
+}
