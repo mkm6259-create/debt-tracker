@@ -17,6 +17,15 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 app.use(cors());
 app.use(bodyParser.json());
 
+// Serve static files (web app) - MUST be before API routes
+const publicPath = path.join(__dirname, 'public');
+if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(publicPath, 'index.html'));
+    });
+}
+
 // Database setup
 const dbPath = path.join(__dirname, 'debt_tracker.db');
 const db = new Database(dbPath);
@@ -492,15 +501,6 @@ app.get('/api/backups/download/:filename', verifyToken, (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
-
-// Serve static files (web app)
-const publicPath = path.join(__dirname, 'public');
-if (fs.existsSync(publicPath)) {
-    app.use(express.static(publicPath));
-    app.get('/', (req, res) => {
-        res.sendFile(path.join(publicPath, 'index.html'));
-    });
-}
 
 // Health check
 app.get('/api/health', (req, res) => {
