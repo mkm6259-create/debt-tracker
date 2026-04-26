@@ -493,6 +493,15 @@ app.get('/api/backups/download/:filename', verifyToken, (req, res) => {
     }
 });
 
+// Serve static files (web app)
+const publicPath = path.join(__dirname, 'public');
+if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(publicPath, 'index.html'));
+    });
+}
+
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', backupEnabled: true });

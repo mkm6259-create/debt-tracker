@@ -1,0 +1,1251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DebtTracker - Track Your Debts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .header-back {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .back-btn {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .back-btn:hover {
+            background: #7f8c8d;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .debtor-title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .total {
+            font-size: 24px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .sync-status {
+            font-size: 12px;
+            color: #27ae60;
+            margin-top: 10px;
+        }
+
+        .sync-status.error {
+            color: #e74c3c;
+        }
+
+        .backup-status {
+            font-size: 12px;
+            color: #3498db;
+            margin-top: 5px;
+            padding: 8px;
+            background: #ecf0f1;
+            border-radius: 6px;
+        }
+
+        .section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .login-section {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .login-subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-success {
+            background: #27ae60;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        .debtor-card {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .debtor-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .debtor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .debtor-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .debtor-name:hover {
+            text-decoration: underline;
+        }
+
+        .debtor-phone {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+        .debt-item {
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border: 1px solid #ecf0f1;
+        }
+
+        .debt-description {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .debt-amount {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #27ae60;
+            transition: width 0.3s;
+        }
+
+        .remaining {
+            font-size: 13px;
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .debt-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .debt-actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+        }
+
+        .payment-history {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ecf0f1;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        .payment-item {
+            padding: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #95a5a6;
+            padding: 30px 20px;
+            font-size: 16px;
+        }
+
+        .debtor-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .debtor-actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 13px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            width: auto;
+            padding: 0;
+            color: #7f8c8d;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .custom-description-input {
+            display: none;
+        }
+
+        .custom-description-input.show {
+            display: block;
+        }
+
+        .payment-distribution {
+            background: #f0f8ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .payment-distribution h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid #ddd;
+        }
+
+        .payment-option input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .payment-option label {
+            margin: 0;
+            flex: 1;
+            font-weight: 400;
+            cursor: pointer;
+        }
+
+        .backup-item {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #27ae60;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .backup-info {
+            flex: 1;
+        }
+
+        .backup-date {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 3px;
+        }
+
+        .backup-size {
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .backup-download {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .backup-download:hover {
+            background: #229954;
+        }
+
+        .settings-btn {
+            background: #95a5a6;
+            padding: 8px 16px;
+            font-size: 14px;
+            width: auto;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            padding: 8px 16px;
+            font-size: 14px;
+            width: auto;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .auth-toggle {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .auth-toggle a {
+            color: #667eea;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- LOGIN PAGE -->
+        <div id="loginPage" class="page active">
+            <div class="login-section">
+                <div class="login-title">💰 DebtTracker</div>
+                <div class="login-subtitle">Track your debts easily</div>
+
+                <!-- Login Form -->
+                <div id="loginForm">
+                    <h2>Login</h2>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="loginUsername" placeholder="Enter username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" placeholder="Enter password">
+                    </div>
+                    <button onclick="login()">Login</button>
+                    <div class="auth-toggle">
+                        Don't have an account? <a onclick="toggleAuthForm()">Sign up</a>
+                    </div>
+                </div>
+
+                <!-- Register Form -->
+                <div id="registerForm" style="display: none;">
+                    <h2>Create Account</h2>
+                    <div class="form-group">
+                        <label>Username</label>
+                        <input type="text" id="registerUsername" placeholder="Choose username">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="registerPassword" placeholder="At least 6 characters">
+                    </div>
+                    <button onclick="register()">Sign Up</button>
+                    <div class="auth-toggle">
+                        Already have an account? <a onclick="toggleAuthForm()">Login</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HOME PAGE -->
+        <div id="homePage" class="page">
+            <header>
+                <h1>💰 DebtTracker</h1>
+                <div class="total">Total Owed: $<span id="totalAmount">0.00</span></div>
+                <div class="sync-status" id="syncStatus">✓ Synced</div>
+                <div class="backup-status">☁️ Auto-backup enabled</div>
+                <button class="settings-btn" onclick="openBackupModal()">📦 Backups</button>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </header>
+
+            <!-- Add Debtor Section -->
+            <div class="section">
+                <h2>Add Debtor</h2>
+                <div class="form-group">
+                    <label>Name</label>
+                    <input type="text" id="debtorName" placeholder="Enter name">
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="debtorPhone" placeholder="Enter phone number">
+                </div>
+                <button onclick="addDebtor()">Add Debtor</button>
+            </div>
+
+            <!-- Debtors List -->
+            <div class="section">
+                <h2>Debtors (<span id="debtorCount">0</span>)</h2>
+                <div id="debtorsList"></div>
+            </div>
+        </div>
+
+        <!-- DEBTOR DETAIL PAGE -->
+        <div id="debtorPage" class="page">
+            <header>
+                <div class="header-back">
+                    <button class="back-btn" onclick="goHome()">← Back</button>
+                </div>
+                <h2 class="debtor-title" id="debtorPageTitle">Debtor Details</h2>
+                <div class="total">Total Owed: $<span id="debtorPageTotal">0.00</span></div>
+            </header>
+
+            <!-- Add Debt Section -->
+            <div class="section">
+                <h2>Add Debt</h2>
+                <div class="form-group">
+                    <label>Description</label>
+                    <select id="debtDescriptionSelect" onchange="handleDescriptionChange()">
+                        <option value="">Select Description</option>
+                        <option value="Taaj Service">Taaj Service</option>
+                        <option value="others">Others (Write Custom)</option>
+                    </select>
+                </div>
+                <div class="form-group custom-description-input" id="customDescriptionDiv">
+                    <label>Custom Description</label>
+                    <input type="text" id="customDescription" placeholder="Enter custom description">
+                </div>
+                <div class="form-group">
+                    <label>Amount</label>
+                    <input type="number" id="debtAmount" placeholder="0.00" step="0.01">
+                </div>
+                <button onclick="saveDebt()">Add Debt</button>
+            </div>
+
+            <!-- Debts List -->
+            <div class="section">
+                <h2>Debts</h2>
+                <div id="debtorDebtsContainer"></div>
+            </div>
+
+            <!-- Log Payment Section -->
+            <div class="section">
+                <h2>Log Payment</h2>
+                <div class="form-group">
+                    <label>Payment Amount</label>
+                    <input type="number" id="logPaymentAmount" placeholder="0.00" step="0.01">
+                </div>
+                <div class="payment-distribution" id="paymentDistributionDiv" style="display: none;">
+                    <h3>Apply Payment To:</h3>
+                    <div id="paymentOptionsContainer"></div>
+                </div>
+                <button onclick="applyPaymentToDebts()">Log Payment</button>
+            </div>
+
+            <!-- Debtor Actions -->
+            <div class="section">
+                <button class="btn-secondary" onclick="openSmsModal()">💬 Send Message</button>
+                <button class="btn-danger" onclick="deleteCurrentDebtor()">Delete Debtor</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Send SMS Modal -->
+    <div id="sendSmsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Send Message</span>
+                <button class="close-btn" onclick="closeSmsModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label>Message</label>
+                <textarea id="smsMessage" placeholder="Type your message..." rows="5"></textarea>
+            </div>
+            <button onclick="sendSms()">Send SMS</button>
+            <button class="btn-secondary" onclick="fillAutoReminder()">Auto Reminder (with Balance)</button>
+        </div>
+    </div>
+
+    <!-- Backup Modal -->
+    <div id="backupModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>📦 Backup Management</span>
+                <button class="close-btn" onclick="closeBackupModal()">×</button>
+            </div>
+            <div class="form-group">
+                <button class="btn-success" onclick="createManualBackup()">Create Backup Now</button>
+            </div>
+            <h3 style="margin-top: 20px; margin-bottom: 10px;">Recent Backups</h3>
+            <div id="backupsList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Detect API URL based on environment
+        let API_URL = 'https://debt-tracker-jp7w.onrender.com/api';
+        
+        // For local development
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            API_URL = 'http://localhost:3001/api';
+        }
+
+        let debtors = [];
+        let currentDebtorId = null;
+        let authToken = localStorage.getItem('authToken');
+
+        // Initialize
+        if (authToken) {
+            showPage('homePage');
+            loadDebtors();
+            setInterval(loadDebtors, 5000);
+        } else {
+            showPage('loginPage');
+        }
+
+        // ===== AUTH FUNCTIONS =====
+
+        function toggleAuthForm() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'block';
+                registerForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'block';
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (!username || !password) {
+                alert('Please enter username and password');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error);
+                }
+
+                const data = await response.json();
+                authToken = data.token;
+                localStorage.setItem('authToken', authToken);
+                
+                document.getElementById('loginUsername').value = '';
+                document.getElementById('loginPassword').value = '';
+                
+                showPage('homePage');
+                loadDebtors();
+                setInterval(loadDebtors, 5000);
+            } catch (err) {
+                alert('Login failed: ' + err.message);
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('registerUsername').value.trim();
+            const password = document.getElementById('registerPassword').value.trim();
+
+            if (!username || !password) {
+                alert('Please enter username and password');
+                return;
+            }
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error);
+                }
+
+                const data = await response.json();
+                authToken = data.token;
+                localStorage.setItem('authToken', authToken);
+                
+                document.getElementById('registerUsername').value = '';
+                document.getElementById('registerPassword').value = '';
+                
+                showPage('homePage');
+                loadDebtors();
+                setInterval(loadDebtors, 5000);
+            } catch (err) {
+                alert('Registration failed: ' + err.message);
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                authToken = null;
+                localStorage.removeItem('authToken');
+                debtors = [];
+                showPage('loginPage');
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+            }
+        }
+
+        // ===== DEBTOR FUNCTIONS =====
+
+        async function loadDebtors() {
+            try {
+                const response = await fetch(`${API_URL}/debtors`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        logout();
+                        return;
+                    }
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                debtors = await response.json();
+                renderDebtors();
+                updateTotal();
+                updateSyncStatus(true);
+            } catch (err) {
+                console.error('Error loading debtors:', err);
+                updateSyncStatus(false);
+            }
+        }
+
+        function updateSyncStatus(success) {
+            const statusEl = document.getElementById('syncStatus');
+            if (success) {
+                statusEl.textContent = '✓ Synced';
+                statusEl.className = 'sync-status';
+            } else {
+                statusEl.textContent = '⚠ Connection error';
+                statusEl.className = 'sync-status error';
+            }
+        }
+
+        function renderDebtors() {
+            const list = document.getElementById('debtorsList');
+            document.getElementById('debtorCount').textContent = debtors.length;
+
+            if (debtors.length === 0) {
+                list.innerHTML = '<div class="empty-state">No debtors yet</div>';
+                return;
+            }
+
+            list.innerHTML = debtors.map(debtor => {
+                const totalDebt = debtor.debts.reduce((sum, debt) => sum + debt.remaining, 0);
+
+                return `
+                    <div class="debtor-card" onclick="viewDebtor(${debtor.id})">
+                        <div class="debtor-header">
+                            <div>
+                                <div class="debtor-name">${debtor.name}</div>
+                                <div class="debtor-phone">${debtor.phone}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 18px; font-weight: bold; color: #e74c3c;">$${totalDebt.toFixed(2)}</div>
+                                <div style="font-size: 12px; color: #7f8c8d;">remaining</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 12px; color: #7f8c8d; margin-top: 8px;">
+                            ${debtor.debts.length} debt${debtor.debts.length !== 1 ? 's' : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateTotal() {
+            const total = debtors.reduce((sum, debtor) => {
+                return sum + debtor.debts.reduce((debtSum, debt) => debtSum + debt.remaining, 0);
+            }, 0);
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+        }
+
+        function viewDebtor(debtorId) {
+            currentDebtorId = debtorId;
+            const debtor = debtors.find(d => d.id === debtorId);
+            
+            if (debtor) {
+                document.getElementById('debtorPageTitle').textContent = debtor.name;
+                const totalDebt = debtor.debts.reduce((sum, debt) => sum + debt.remaining, 0);
+                document.getElementById('debtorPageTotal').textContent = totalDebt.toFixed(2);
+                
+                renderDebtorDebts(debtor);
+                renderPaymentOptions(debtor);
+                showPage('debtorPage');
+            }
+        }
+
+        function renderDebtorDebts(debtor) {
+            const container = document.getElementById('debtorDebtsContainer');
+            
+            if (debtor.debts.length === 0) {
+                container.innerHTML = '<div class="empty-state">No debts yet</div>';
+                return;
+            }
+
+            container.innerHTML = debtor.debts.map(debt => `
+                <div class="debt-item">
+                    <div class="debt-description">${debt.description}</div>
+                    <div class="debt-amount">Original: $${debt.amount.toFixed(2)} | Paid: $${debt.paid.toFixed(2)}</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${(debt.paid / debt.amount) * 100}%"></div>
+                    </div>
+                    <div class="remaining">Remaining: $${debt.remaining.toFixed(2)}</div>
+                    
+                    ${debt.payments && debt.payments.length > 0 ? `
+                        <div class="payment-history">
+                            <strong>Payments:</strong>
+                            ${debt.payments.map(p => `<div class="payment-item"><span>${p.date}</span><span>$${p.amount.toFixed(2)}</span></div>`).join('')}
+                        </div>
+                    ` : ''}
+
+                    <div class="debt-actions">
+                        <button class="btn-danger" onclick="deleteDebt(${debt.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPaymentOptions(debtor) {
+            const container = document.getElementById('paymentOptionsContainer');
+            const div = document.getElementById('paymentDistributionDiv');
+            
+            if (debtor.debts.length === 0) {
+                div.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = debtor.debts.map(debt => `
+                <div class="payment-option">
+                    <input type="radio" name="paymentDebt" value="${debt.id}" id="debt_${debt.id}">
+                    <label for="debt_${debt.id}">${debt.description} - $${debt.remaining.toFixed(2)} remaining</label>
+                </div>
+            `).join('');
+
+            if (debtor.debts.length > 0) {
+                document.getElementById(`debt_${debtor.debts[0].id}`).checked = true;
+            }
+        }
+
+        function goHome() {
+            showPage('homePage');
+            document.getElementById('debtDescriptionSelect').value = '';
+            document.getElementById('customDescription').value = '';
+            document.getElementById('debtAmount').value = '';
+            document.getElementById('logPaymentAmount').value = '';
+            document.getElementById('customDescriptionDiv').classList.remove('show');
+        }
+
+        function showPage(pageName) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageName).classList.add('active');
+        }
+
+        function handleDescriptionChange() {
+            const select = document.getElementById('debtDescriptionSelect');
+            const customDiv = document.getElementById('customDescriptionDiv');
+            
+            if (select.value === 'others') {
+                customDiv.classList.add('show');
+            } else {
+                customDiv.classList.remove('show');
+            }
+        }
+
+        async function addDebtor() {
+            const name = document.getElementById('debtorName').value.trim();
+            const phone = document.getElementById('debtorPhone').value.trim();
+
+            if (!name || !phone) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/debtors`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ name, phone })
+                });
+
+                if (!response.ok) throw new Error('Failed to add debtor');
+
+                document.getElementById('debtorName').value = '';
+                document.getElementById('debtorPhone').value = '';
+                await loadDebtors();
+            } catch (err) {
+                alert('Error adding debtor: ' + err.message);
+            }
+        }
+
+        async function saveDebt() {
+            let description = document.getElementById('debtDescriptionSelect').value;
+            
+            if (description === 'others') {
+                description = document.getElementById('customDescription').value.trim();
+            }
+
+            const amount = parseFloat(document.getElementById('debtAmount').value);
+
+            if (!description || !amount || amount <= 0) {
+                alert('Please fill in all fields correctly');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/debts`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ debtor_id: currentDebtorId, description, amount })
+                });
+
+                if (!response.ok) throw new Error('Failed to add debt');
+
+                document.getElementById('debtDescriptionSelect').value = '';
+                document.getElementById('customDescription').value = '';
+                document.getElementById('debtAmount').value = '';
+                document.getElementById('customDescriptionDiv').classList.remove('show');
+                
+                await loadDebtors();
+                viewDebtor(currentDebtorId);
+            } catch (err) {
+                alert('Error adding debt: ' + err.message);
+            }
+        }
+
+        async function applyPaymentToDebts() {
+            const amount = parseFloat(document.getElementById('logPaymentAmount').value);
+            const selectedDebtId = document.querySelector('input[name="paymentDebt"]:checked')?.value;
+
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+
+            if (!selectedDebtId) {
+                alert('Please select a debt to apply payment to');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/payments`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ debt_id: parseInt(selectedDebtId), amount })
+                });
+
+                if (!response.ok) throw new Error('Failed to log payment');
+
+                document.getElementById('logPaymentAmount').value = '';
+                await loadDebtors();
+                viewDebtor(currentDebtorId);
+            } catch (err) {
+                alert('Error logging payment: ' + err.message);
+            }
+        }
+
+        async function deleteDebt(debtId) {
+            if (!confirm('Delete this debt?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/debts/${debtId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to delete debt');
+
+                await loadDebtors();
+                viewDebtor(currentDebtorId);
+            } catch (err) {
+                alert('Error deleting debt: ' + err.message);
+            }
+        }
+
+        async function deleteCurrentDebtor() {
+            if (!confirm('Delete this debtor and all their debts?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/debtors/${currentDebtorId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to delete debtor');
+
+                await loadDebtors();
+                goHome();
+            } catch (err) {
+                alert('Error deleting debtor: ' + err.message);
+            }
+        }
+
+        function openSmsModal() {
+            document.getElementById('smsMessage').value = '';
+            document.getElementById('sendSmsModal').classList.add('active');
+        }
+
+        function closeSmsModal() {
+            document.getElementById('sendSmsModal').classList.remove('active');
+        }
+
+        function fillAutoReminder() {
+            const debtor = debtors.find(d => d.id === currentDebtorId);
+
+            if (debtor) {
+                const totalDebt = debtor.debts.reduce((sum, debt) => sum + debt.remaining, 0);
+                
+                const debtsList = debtor.debts.map(d => {
+                    let debtInfo = `${d.description}: $${d.remaining.toFixed(2)} remaining`;
+                    
+                    if (d.payments && d.payments.length > 0) {
+                        const lastPayment = d.payments[d.payments.length - 1];
+                        debtInfo += ` (Last payment: ${lastPayment.date})`;
+                    } else {
+                        debtInfo += ` (No payments yet)`;
+                    }
+                    
+                    return debtInfo;
+                }).join('\n');
+                
+                document.getElementById('smsMessage').value = `Hi ${debtor.name}, this is a friendly reminder about your outstanding balance of $${totalDebt.toFixed(2)}.\n\nBreakdown:\n${debtsList}\n\nPlease make a payment when you can. Thank you!`;
+            }
+        }
+
+        function sendSms() {
+            const debtor = debtors.find(d => d.id === currentDebtorId);
+            const message = document.getElementById('smsMessage').value.trim();
+
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+
+            if (debtor) {
+                const smsLink = `sms:${debtor.phone}?body=${encodeURIComponent(message)}`;
+                window.location.href = smsLink;
+                closeSmsModal();
+            }
+        }
+
+        // Backup functions
+        function openBackupModal() {
+            document.getElementById('backupModal').classList.add('active');
+            loadBackups();
+        }
+
+        function closeBackupModal() {
+            document.getElementById('backupModal').classList.remove('active');
+        }
+
+        async function loadBackups() {
+            try {
+                const response = await fetch(`${API_URL}/backups/files`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load backups');
+                
+                const files = await response.json();
+                const list = document.getElementById('backupsList');
+
+                if (files.length === 0) {
+                    list.innerHTML = '<div class="empty-state">No backups yet</div>';
+                    return;
+                }
+
+                list.innerHTML = files.map(file => {
+                    const date = new Date(file.date).toLocaleString();
+                    const size = (file.size / 1024).toFixed(2);
+                    return `
+                        <div class="backup-item">
+                            <div class="backup-info">
+                                <div class="backup-date">${file.name}</div>
+                                <div class="backup-size">${date} • ${size} KB</div>
+                            </div>
+                            <a href="${API_URL}/backups/download/${file.name}" class="backup-download" onclick="event.preventDefault(); downloadBackup('${file.name}')">Download</a>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error('Error loading backups:', err);
+            }
+        }
+
+        async function downloadBackup(filename) {
+            try {
+                const response = await fetch(`${API_URL}/backups/download/${filename}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to download backup');
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+            } catch (err) {
+                alert('Error downloading backup: ' + err.message);
+            }
+        }
+
+        async function createManualBackup() {
+            try {
+                const response = await fetch(`${API_URL}/backups/create`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to create backup');
+
+                alert('✓ Backup created successfully!');
+                loadBackups();
+            } catch (err) {
+                alert('Error creating backup: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
