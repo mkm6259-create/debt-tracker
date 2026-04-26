@@ -1186,8 +1186,6 @@
                 await loadDebtors();
                 const debtor = debtors.find(d => d.id === currentDebtorId);
                 const remainingTotal = debtor.debts.reduce((sum, d) => sum + d.remaining, 0);
-                const paymentMethod = document.getElementById('paymentMethod').value;
-                const notes = document.getElementById('paymentNotes').value.trim();
                 
                 // Show detailed success message
                 let message = `✓ Payment Received\n\nAmount: $${amount.toFixed(2)}\nMethod: ${paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1)}`;
