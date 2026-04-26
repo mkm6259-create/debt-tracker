@@ -1030,13 +1030,28 @@
                 const result = await response.json();
                 console.log('Debtor added:', result);
                 
+                // Clear form
                 document.getElementById('debtorName').value = '';
                 document.getElementById('debtorPhone').value = '';
+                
+                // Wait for backend to process
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
                 // Reload and verify
                 await loadDebtors();
                 const found = debtors.some(d => d.id === result.id);
                 console.log('Debtor found in list after reload:', found);
+                
+                if (!found) {
+                    console.warn('Debtor not found, retrying...');
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await loadDebtors();
+                    const foundRetry = debtors.some(d => d.id === result.id);
+                    if (!foundRetry) {
+                        alert(`Warning: Debtor created but not found. Please refresh the page.`);
+                        return;
+                    }
+                }
                 
                 alert(`✓ Success! Debtor "${name}" added and verified.`);
             } catch (err) {
