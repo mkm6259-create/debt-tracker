@@ -656,7 +656,7 @@
                     <input type="text" id="paymentNotes" placeholder="e.g., Check #12345" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px;">
                 </div>
                 <div class="payment-distribution" id="paymentDistributionDiv" style="display: none;">
-                    <h3>Apply Payment To:</h3>
+                    <h3 style="display:none;">Apply Payment To:</h3>
                     <div id="paymentOptionsContainer"></div>
                 </div>
                 <div style="display: flex; gap: 10px;">
@@ -1164,18 +1164,17 @@
                 return;
             }
 
-            if (!selectedDebtId) {
-                alert('Please select a debt to apply payment to');
+            // Get current debtor and their debts
+            const debtor = debtors.find(d => d.id === currentDebtorId);
+            if (!debtor || !debtor.debts || debtor.debts.length === 0) {
+                alert('No debts found for this debtor');
                 return;
             }
 
-            // Check if payment exceeds remaining balance
-            const selectedDebt = debtors
-                .flatMap(d => d.debts)
-                .find(d => d.id === parseInt(selectedDebtId));
-            
-            if (selectedDebt && amount > selectedDebt.remaining) {
-                alert(`Payment amount ($${amount}) exceeds remaining balance ($${selectedDebt.remaining.toFixed(2)})`);
+            // Calculate total remaining
+            const totalRemaining = debtor.debts.reduce((sum, d) => sum + d.remaining, 0);
+            if (amount > totalRemaining) {
+                alert(`Payment amount ($${amount.toFixed(2)}) exceeds total remaining balance ($${totalRemaining.toFixed(2)})`);
                 return;
             }
 
@@ -1183,23 +1182,34 @@
                 const paymentMethod = document.getElementById('paymentMethod').value;
                 const notes = document.getElementById('paymentNotes').value.trim();
                 
-                const response = await fetch(`${API_URL}/payments`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
-                    },
-                    body: JSON.stringify({ 
-                        debt_id: parseInt(selectedDebtId), 
-                        amount,
-                        payment_method: paymentMethod,
-                        notes: notes
-                    })
-                });
+                // Distribute payment across debts in order
+                let remainingPayment = amount;
+                
+                for (const debt of debtor.debts) {
+                    if (remainingPayment <= 0) break;
+                    
+                    const paymentForDebt = Math.min(remainingPayment, debt.remaining);
+                    
+                    const response = await fetch(`${API_URL}/payments`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${authToken}`
+                        },
+                        body: JSON.stringify({ 
+                            debt_id: debt.id, 
+                            amount: paymentForDebt,
+                            payment_method: paymentMethod,
+                            notes: notes
+                        })
+                    });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Failed to log payment');
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || 'Failed to log payment');
+                    }
+                    
+                    remainingPayment -= paymentForDebt;
                 }
 
                 // Get updated debtor info
