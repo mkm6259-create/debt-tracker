@@ -1135,8 +1135,21 @@
                     }
                 }
 
+                // Wait a bit to ensure server has processed all payments
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Force refresh from API
                 await loadDebtors();
+                
+                // Wait for UI to update
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
                 const updatedDebtor = debtors.find(d => d.id === currentDebtorId);
+                if (!updatedDebtor) {
+                    console.error('Debtor not found after refresh');
+                    alert('Error: Could not refresh debtor data');
+                    return;
+                }
                 const remainingTotal = updatedDebtor.debts.reduce((sum, d) => sum + d.remaining, 0);
                 
                 let message = `✓ Taaj Transfer\n\nAmount Paid: $${totalRemaining.toFixed(2)}`;
@@ -1217,8 +1230,21 @@
                 }
 
                 // Get updated debtor info
+                // Wait a bit to ensure server has processed all payments
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Force refresh from API
                 await loadDebtors();
+                
+                // Wait for UI to update
+                await new Promise(resolve => setTimeout(resolve, 300));
+                
                 const updatedDebtor = debtors.find(d => d.id === currentDebtorId);
+                if (!updatedDebtor) {
+                    console.error('Debtor not found after refresh');
+                    alert('Error: Could not refresh debtor data');
+                    return;
+                }
                 const remainingTotal = updatedDebtor.debts.reduce((sum, d) => sum + d.remaining, 0);
                 
                 // Show detailed success message
