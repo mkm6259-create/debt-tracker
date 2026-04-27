@@ -10,9 +10,8 @@ RUN npm install --production
 
 # Copy application files
 COPY server.js .
+COPY database_seed.json .
 COPY public ./public
-
-# Database will be created on first run
 
 # Expose port
 EXPOSE 3001
