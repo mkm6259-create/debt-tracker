@@ -17,9 +17,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 app.use(cors());
 app.use(bodyParser.json());
 
-// ===== API ROUTES MUST COME FIRST =====
-// (Before static file serving, so /api/* routes are handled correctly)
-
 // Database setup
 const dbPath = path.join(__dirname, 'debt_tracker.db');
 const db = new Database(dbPath);
@@ -52,7 +49,7 @@ function initializeDatabase() {
             amount REAL NOT NULL,
             paid REAL DEFAULT 0,
             remaining REAL NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP, user_id INTEGER DEFAULT 1,
             FOREIGN KEY (debtor_id) REFERENCES debtors(id) ON DELETE CASCADE
         );
 
@@ -63,6 +60,8 @@ function initializeDatabase() {
             amount REAL NOT NULL,
             date TEXT NOT NULL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            payment_method TEXT DEFAULT 'cash',
+            notes TEXT,
             FOREIGN KEY (debt_id) REFERENCES debts(id) ON DELETE CASCADE
         );
 
@@ -92,11 +91,9 @@ function initializeDatabase() {
 
 initializeDatabase();
 
-// ===== AUTHENTICATION MIDDLEWARE =====
-
+// JWT verification middleware
 function verifyToken(req, res, next) {
     const token = req.headers.authorization?.split(' ')[1];
-
     if (!token) {
         return res.status(401).json({ error: 'No token provided' });
     }
@@ -116,31 +113,17 @@ function verifyToken(req, res, next) {
 app.post('/api/auth/register', (req, res) => {
     try {
         const { username, password } = req.body;
-
         if (!username || !password) {
             return res.status(400).json({ error: 'Username and password required' });
-        }
-
-        if (password.length < 6) {
-            return res.status(400).json({ error: 'Password must be at least 6 characters' });
         }
 
         const hashedPassword = bcryptjs.hashSync(password, 10);
         const result = db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run(username, hashedPassword);
 
-        const token = jwt.sign({ userId: result.lastInsertRowid }, JWT_SECRET, { expiresIn: '30d' });
-
-        res.json({ 
-            success: true, 
-            token,
-            user: { id: result.lastInsertRowid, username }
-        });
+        const token = jwt.sign({ userId: result.lastInsertRowid }, JWT_SECRET);
+        res.json({ token, userId: result.lastInsertRowid });
     } catch (err) {
-        if (err.message.includes('UNIQUE')) {
-            res.status(400).json({ error: 'Username already exists' });
-        } else {
-            res.status(500).json({ error: err.message });
-        }
+        res.status(400).json({ error: err.message });
     }
 });
 
@@ -148,97 +131,25 @@ app.post('/api/auth/register', (req, res) => {
 app.post('/api/auth/login', (req, res) => {
     try {
         const { username, password } = req.body;
-
         if (!username || !password) {
             return res.status(400).json({ error: 'Username and password required' });
         }
 
         const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
-
-        if (!user) {
-            return res.status(401).json({ error: 'Invalid username or password' });
+        if (!user || !bcryptjs.compareSync(password, user.password)) {
+            return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        const isPasswordValid = bcryptjs.compareSync(password, user.password);
-
-        if (!isPasswordValid) {
-            return res.status(401).json({ error: 'Invalid username or password' });
-        }
-
-        const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '30d' });
-
-        res.json({ 
-            success: true, 
-            token,
-            user: { id: user.id, username: user.username }
-        });
+        const token = jwt.sign({ userId: user.id }, JWT_SECRET);
+        res.json({ token, userId: user.id });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// ===== BACKUP FUNCTIONALITY =====
-
-function createLocalBackup(userId) {
-    try {
-        const backupDir = path.join(__dirname, 'backups');
-        
-        if (!fs.existsSync(backupDir)) {
-            fs.mkdirSync(backupDir, { recursive: true });
-        }
-
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const backupFileName = `debt_tracker_backup_${timestamp}.db`;
-        const backupPath = path.join(backupDir, backupFileName);
-
-        fs.copyFileSync(dbPath, backupPath);
-
-        const debtors = db.prepare('SELECT * FROM debtors WHERE user_id = ?').all(userId);
-        const debts = db.prepare(`
-            SELECT d.* FROM debts d
-            JOIN debtors dr ON d.debtor_id = dr.id
-            WHERE dr.user_id = ?
-        `).all(userId);
-        const payments = db.prepare(`
-            SELECT p.* FROM payments p
-            JOIN debts d ON p.debt_id = d.id
-            JOIN debtors dr ON d.debtor_id = dr.id
-            WHERE dr.user_id = ?
-        `).all(userId);
-
-        const jsonBackup = {
-            timestamp: new Date().toISOString(),
-            debtors,
-            debts,
-            payments
-        };
-
-        const jsonBackupPath = path.join(backupDir, `debt_tracker_backup_${timestamp}.json`);
-        fs.writeFileSync(jsonBackupPath, JSON.stringify(jsonBackup, null, 2));
-
-        db.prepare(`
-            INSERT INTO backups (user_id, backup_date, backup_location, backup_size, status)
-            VALUES (?, ?, ?, ?, ?)
-        `).run(userId, new Date().toISOString(), backupPath, fs.statSync(backupPath).size, 'completed');
-
-        console.log(`✓ Backup created: ${backupFileName}`);
-        return { success: true, backupPath, jsonBackupPath };
-    } catch (err) {
-        console.error('Backup error:', err.message);
-        return { success: false, error: err.message };
-    }
-}
-
-// Automatic backup every 6 hours
-setInterval(() => {
-    console.log('Running scheduled backup...');
-    const users = db.prepare('SELECT id FROM users').all();
-    users.forEach(user => createLocalBackup(user.id));
-}, 6 * 60 * 60 * 1000);
-
 // ===== DEBTOR ENDPOINTS =====
 
-// Get all debtors for logged-in user
+// Get debtors
 app.get('/api/debtors', verifyToken, (req, res) => {
     try {
         const debtors = db.prepare(`
@@ -278,35 +189,29 @@ app.get('/api/debtors', verifyToken, (req, res) => {
 app.post('/api/debtors', verifyToken, (req, res) => {
     try {
         const { name, phone } = req.body;
-        const uuid = `debtor_${Date.now()}`;
 
         if (!name || !phone) {
             return res.status(400).json({ error: 'Name and phone required' });
         }
 
-        const result = db.prepare(
-            'INSERT INTO debtors (uuid, user_id, name, phone) VALUES (?, ?, ?, ?)'
-        ).run(uuid, req.userId, name, phone);
-
-        createLocalBackup(req.userId);
+        const uuid = `debtor_${Date.now()}`;
+        const result = db.prepare('INSERT INTO debtors (uuid, user_id, name, phone) VALUES (?, ?, ?, ?)').run(uuid, req.userId, name, phone);
 
         res.json({ id: result.lastInsertRowid, uuid, name, phone, debts: [] });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(400).json({ error: err.message });
     }
 });
 
 // Delete debtor
 app.delete('/api/debtors/:id', verifyToken, (req, res) => {
     try {
-        // Verify ownership
-        const debtor = db.prepare('SELECT user_id FROM debtors WHERE id = ?').get(req.params.id);
-        if (!debtor || debtor.user_id !== req.userId) {
-            return res.status(403).json({ error: 'Unauthorized' });
+        const debtor = db.prepare('SELECT * FROM debtors WHERE id = ? AND user_id = ?').get(req.params.id, req.userId);
+        if (!debtor) {
+            return res.status(404).json({ error: 'Debtor not found' });
         }
 
         db.prepare('DELETE FROM debtors WHERE id = ?').run(req.params.id);
-        createLocalBackup(req.userId);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -319,55 +224,40 @@ app.delete('/api/debtors/:id', verifyToken, (req, res) => {
 app.post('/api/debts', verifyToken, (req, res) => {
     try {
         const { debtor_id, description, amount } = req.body;
-        const uuid = `debt_${Date.now()}`;
 
         if (!debtor_id || !description || !amount || amount <= 0) {
             return res.status(400).json({ error: 'Invalid debt data' });
         }
 
         // Verify ownership
-        const debtor = db.prepare('SELECT user_id FROM debtors WHERE id = ?').get(debtor_id);
-        if (!debtor || debtor.user_id !== req.userId) {
+        const debtor = db.prepare('SELECT * FROM debtors WHERE id = ? AND user_id = ?').get(debtor_id, req.userId);
+        if (!debtor) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
 
-        const result = db.prepare(
-            'INSERT INTO debts (uuid, debtor_id, description, amount, remaining) VALUES (?, ?, ?, ?, ?)'
-        ).run(uuid, debtor_id, description, amount, amount);
+        const uuid = `debt_${Date.now()}`;
+        const result = db.prepare('INSERT INTO debts (uuid, debtor_id, description, amount, remaining, user_id) VALUES (?, ?, ?, ?, ?, ?)').run(uuid, debtor_id, description, amount, amount, req.userId);
 
-        createLocalBackup(req.userId);
-
-        res.json({ 
-            id: result.lastInsertRowid, 
-            uuid, 
-            debtor_id, 
-            description, 
-            amount, 
-            paid: 0, 
-            remaining: amount,
-            payments: []
-        });
+        res.json({ id: result.lastInsertRowid, uuid, debtor_id, description, amount, paid: 0, remaining: amount });
     } catch (err) {
-        res.status(500).json({ error: err.message });
+        res.status(400).json({ error: err.message });
     }
 });
 
 // Delete debt
 app.delete('/api/debts/:id', verifyToken, (req, res) => {
     try {
-        // Verify ownership
         const debt = db.prepare(`
-            SELECT d.id FROM debts d
+            SELECT d.* FROM debts d
             JOIN debtors dr ON d.debtor_id = dr.id
             WHERE d.id = ? AND dr.user_id = ?
         `).get(req.params.id, req.userId);
 
         if (!debt) {
-            return res.status(403).json({ error: 'Unauthorized' });
+            return res.status(404).json({ error: 'Debt not found' });
         }
 
         db.prepare('DELETE FROM debts WHERE id = ?').run(req.params.id);
-        createLocalBackup(req.userId);
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -376,7 +266,6 @@ app.delete('/api/debts/:id', verifyToken, (req, res) => {
 
 // ===== PAYMENT ENDPOINTS =====
 
-// Add payment
 app.post('/api/payments', verifyToken, (req, res) => {
     try {
         const { debt_id, amount, payment_method = 'cash', notes = '' } = req.body;
@@ -427,23 +316,6 @@ app.post('/api/payments', verifyToken, (req, res) => {
     }
 });
 
-// ===== STATIC FILES & HTML (LAST) =====
-// Serve HTML directly from root
-app.get('/', (req, res) => {
-    const htmlPath = path.join(__dirname, 'public', 'index.html');
-    if (fs.existsSync(htmlPath)) {
-        res.sendFile(htmlPath);
-    } else {
-        res.status(404).send('App not found');
-    }
-});
-
-// Serve static files (MUST be after all API routes)
-const publicPath = path.join(__dirname, 'public');
-if (fs.existsSync(publicPath)) {
-    app.use(express.static(publicPath));
-}
-
 // ===== BACKUP ENDPOINTS =====
 
 // Get backup history
@@ -458,56 +330,37 @@ app.get('/api/backups', verifyToken, (req, res) => {
     }
 });
 
-// Manual backup trigger
+// Create backup
 app.post('/api/backups/create', verifyToken, (req, res) => {
-    try {
-        const result = createLocalBackup(req.userId);
-        res.json(result);
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+    createLocalBackup(req.userId);
+    res.json({ success: true, message: 'Backup created' });
 });
 
-// Get backup files list
+// List backup files
 app.get('/api/backups/files', verifyToken, (req, res) => {
     try {
         const backupDir = path.join(__dirname, 'backups');
-        
         if (!fs.existsSync(backupDir)) {
             return res.json([]);
         }
-
-        const files = fs.readdirSync(backupDir)
-            .filter(f => f.endsWith('.json') || f.endsWith('.db'))
-            .map(f => ({
-                name: f,
-                size: fs.statSync(path.join(backupDir, f)).size,
-                date: fs.statSync(path.join(backupDir, f)).mtime
-            }))
-            .sort((a, b) => b.date - a.date);
-
+        const files = fs.readdirSync(backupDir);
         res.json(files);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });
 
-// Download backup file
+// Download backup
 app.get('/api/backups/download/:filename', verifyToken, (req, res) => {
     try {
         const filename = req.params.filename;
-        const backupDir = path.join(__dirname, 'backups');
-        const filePath = path.join(backupDir, filename);
+        const backupPath = path.join(__dirname, 'backups', filename);
 
-        if (!filePath.startsWith(backupDir)) {
-            return res.status(403).json({ error: 'Access denied' });
+        if (!fs.existsSync(backupPath)) {
+            return res.status(404).json({ error: 'Backup not found' });
         }
 
-        if (!fs.existsSync(filePath)) {
-            return res.status(404).json({ error: 'File not found' });
-        }
-
-        res.download(filePath);
+        res.download(backupPath);
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -515,8 +368,68 @@ app.get('/api/backups/download/:filename', verifyToken, (req, res) => {
 
 // Health check
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', backupEnabled: true });
+    res.json({ ok: true, timestamp: Date.now() });
 });
+
+// ===== STATIC FILES & HTML (CATCH-ALL ROUTES) =====
+// Serve static files from public folder for non-API requests
+app.use((req, res, next) => {
+    // Skip static file serving for API routes
+    if (req.path.startsWith('/api')) {
+        return next();
+    }
+
+    const publicPath = path.join(__dirname, 'public');
+    const filePath = path.join(publicPath, req.path);
+
+    // Check if file exists and is a file (not directory)
+    try {
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+            return res.sendFile(filePath);
+        }
+    } catch (err) {
+        // Continue to next handler
+    }
+
+    next();
+});
+
+// Catch-all: Serve index.html for root and non-API routes
+app.use((req, res) => {
+    // Don't serve HTML for API routes (they should 404)
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'API endpoint not found' });
+    }
+
+    const htmlPath = path.join(__dirname, 'public', 'index.html');
+    if (fs.existsSync(htmlPath)) {
+        res.sendFile(htmlPath);
+    } else {
+        res.status(404).send('App not found');
+    }
+});
+
+// Helper function to create backups
+function createLocalBackup(userId) {
+    try {
+        const backupDir = path.join(__dirname, 'backups');
+        if (!fs.existsSync(backupDir)) {
+            fs.mkdirSync(backupDir, { recursive: true });
+        }
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const backupFile = path.join(backupDir, `backup_${timestamp}.db`);
+        const dbFile = path.join(__dirname, 'debt_tracker.db');
+
+        if (fs.existsSync(dbFile)) {
+            fs.copyFileSync(dbFile, backupFile);
+            const stats = fs.statSync(backupFile);
+            db.prepare('INSERT INTO backups (user_id, backup_location, backup_size) VALUES (?, ?, ?)').run(userId, backupFile, stats.size);
+        }
+    } catch (err) {
+        console.error('Error creating backup:', err.message);
+    }
+}
 
 // Start server
 app.listen(PORT, () => {
