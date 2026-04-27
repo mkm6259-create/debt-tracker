@@ -3,3 +3,4 @@ npm-debug.log
 .DS_Store
 backups/
 *.log
+debt_tracker.db
