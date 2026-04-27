@@ -17,21 +17,8 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-producti
 app.use(cors());
 app.use(bodyParser.json());
 
-// Serve HTML directly from root
-app.get('/', (req, res) => {
-    const htmlPath = path.join(__dirname, 'public', 'index.html');
-    if (fs.existsSync(htmlPath)) {
-        res.sendFile(htmlPath);
-    } else {
-        res.status(404).send('App not found');
-    }
-});
-
-// Serve static files
-const publicPath = path.join(__dirname, 'public');
-if (fs.existsSync(publicPath)) {
-    app.use(express.static(publicPath));
-}
+// ===== API ROUTES MUST COME FIRST =====
+// (Before static file serving, so /api/* routes are handled correctly)
 
 // Database setup
 const dbPath = path.join(__dirname, 'debt_tracker.db');
@@ -439,6 +426,23 @@ app.post('/api/payments', verifyToken, (req, res) => {
         res.status(500).json({ error: err.message });
     }
 });
+
+// ===== STATIC FILES & HTML (LAST) =====
+// Serve HTML directly from root
+app.get('/', (req, res) => {
+    const htmlPath = path.join(__dirname, 'public', 'index.html');
+    if (fs.existsSync(htmlPath)) {
+        res.sendFile(htmlPath);
+    } else {
+        res.status(404).send('App not found');
+    }
+});
+
+// Serve static files (MUST be after all API routes)
+const publicPath = path.join(__dirname, 'public');
+if (fs.existsSync(publicPath)) {
+    app.use(express.static(publicPath));
+}
 
 // ===== BACKUP ENDPOINTS =====
 
