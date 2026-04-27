@@ -1,0 +1,201 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "$2b$10$COINGzj0xqM6qSfRk3XDj.gF3ycgINbB.GMU9BZkm.8YvtRVc9HT.",
+      "created_at": "2026-04-25 21:58:20"
+    }
+  ],
+  "debtors": [
+    {
+      "id": 2,
+      "uuid": "debtor_1777148830956",
+      "name": "Moo",
+      "phone": "6127016195",
+      "created_at": "2026-04-25 20:27:10",
+      "user_id": 1
+    },
+    {
+      "id": 3,
+      "uuid": "debtor_1777149199204",
+      "name": "Calili",
+      "phone": "612555",
+      "created_at": "2026-04-25 20:33:19",
+      "user_id": 1
+    },
+    {
+      "id": 4,
+      "uuid": "debtor_1777155352147",
+      "name": "Yusuf",
+      "phone": "6124234243",
+      "created_at": "2026-04-25 22:15:52",
+      "user_id": 1
+    },
+    {
+      "id": 5,
+      "uuid": "debtor_1777240270419_0.5876436448891063",
+      "name": "Mohamed Kalid",
+      "phone": "6127016195",
+      "created_at": "2026-04-26 21:51:10",
+      "user_id": 1
+    },
+    {
+      "id": 6,
+      "uuid": "debtor_1777240270439_0.8363815542503035",
+      "name": "Calili Foad",
+      "phone": "(612) 422-3385",
+      "created_at": "2026-04-26 21:51:10",
+      "user_id": 1
+    },
+    {
+      "id": 7,
+      "uuid": "debtor_1777240270440_0.8571772105590199",
+      "name": "Ahmed Sharmany",
+      "phone": "(612) 886-4943",
+      "created_at": "2026-04-26 21:51:10",
+      "user_id": 1
+    },
+    {
+      "id": 8,
+      "uuid": "debtor_1777240270441_0.45099741128519155",
+      "name": "Omar Mubarak",
+      "phone": "(763) 587-5299",
+      "created_at": "2026-04-26 21:51:10",
+      "user_id": 1
+    }
+  ],
+  "debts": [
+    {
+      "id": 2,
+      "uuid": "debt_1777148839598",
+      "debtor_id": 2,
+      "description": "taaj",
+      "amount": 100,
+      "paid": 100,
+      "remaining": 0,
+      "created_at": "2026-04-25 20:27:19",
+      "user_id": 1
+    },
+    {
+      "id": 3,
+      "uuid": "debt_1777149075717",
+      "debtor_id": 2,
+      "description": "Taaj",
+      "amount": 90,
+      "paid": 0,
+      "remaining": 90,
+      "created_at": "2026-04-25 20:31:15",
+      "user_id": 1
+    },
+    {
+      "id": 4,
+      "uuid": "debt_1777149212684",
+      "debtor_id": 3,
+      "description": "Taaj",
+      "amount": 50,
+      "paid": 25,
+      "remaining": 25,
+      "created_at": "2026-04-25 20:33:32",
+      "user_id": 1
+    },
+    {
+      "id": 5,
+      "uuid": "debt_1777149225917",
+      "debtor_id": 3,
+      "description": "Taaj",
+      "amount": 60,
+      "paid": 0,
+      "remaining": 60,
+      "created_at": "2026-04-25 20:33:45",
+      "user_id": 1
+    },
+    {
+      "id": 6,
+      "uuid": "debt_1777155366347",
+      "debtor_id": 4,
+      "description": "Food",
+      "amount": 60,
+      "paid": 0,
+      "remaining": 60,
+      "created_at": "2026-04-25 22:16:06",
+      "user_id": 1
+    },
+    {
+      "id": 7,
+      "uuid": "debt_1777240302436_0.5628857498135538",
+      "debtor_id": 5,
+      "description": "Taaj",
+      "amount": 1345,
+      "paid": 0,
+      "remaining": 1345,
+      "created_at": "2026-04-26 21:51:42",
+      "user_id": 1
+    },
+    {
+      "id": 8,
+      "uuid": "debt_1777240302442_0.6600127454349738",
+      "debtor_id": 6,
+      "description": "Taaj",
+      "amount": 237.1,
+      "paid": 0,
+      "remaining": 237.1,
+      "created_at": "2026-04-26 21:51:42",
+      "user_id": 1
+    },
+    {
+      "id": 9,
+      "uuid": "debt_1777240302444_0.3764166052916753",
+      "debtor_id": 7,
+      "description": "Taaj",
+      "amount": 310,
+      "paid": 0,
+      "remaining": 310,
+      "created_at": "2026-04-26 21:51:42",
+      "user_id": 1
+    },
+    {
+      "id": 10,
+      "uuid": "debt_1777240302445_0.04295048226213605",
+      "debtor_id": 8,
+      "description": "Taaj",
+      "amount": 920,
+      "paid": 0,
+      "remaining": 920,
+      "created_at": "2026-04-26 21:51:42",
+      "user_id": 1
+    }
+  ],
+  "payments": [
+    {
+      "id": 1,
+      "uuid": "payment_1777149035642",
+      "debt_id": 2,
+      "amount": 50,
+      "date": "4/25/2026",
+      "created_at": "2026-04-25 20:30:35",
+      "payment_method": "cash",
+      "notes": null
+    },
+    {
+      "id": 2,
+      "uuid": "payment_1777149941958",
+      "debt_id": 2,
+      "amount": 50,
+      "date": "4/25/2026",
+      "created_at": "2026-04-25 20:45:41",
+      "payment_method": "cash",
+      "notes": null
+    },
+    {
+      "id": 3,
+      "uuid": "payment_1777150301926",
+      "debt_id": 4,
+      "amount": 25,
+      "date": "4/25/2026",
+      "created_at": "2026-04-25 20:51:41",
+      "payment_method": "cash",
+      "notes": null
+    }
+  ]
+}

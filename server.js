@@ -76,16 +76,47 @@ function initializeDatabase() {
         );
     `);
 
-    // Create default user if not exists
+    // Load seed data if database is empty
     try {
-        const existingUser = db.prepare('SELECT * FROM users WHERE username = ?').get('admin');
-        if (!existingUser) {
-            const hashedPassword = bcryptjs.hashSync('admin123', 10);
-            db.prepare('INSERT INTO users (username, password) VALUES (?, ?)').run('admin', hashedPassword);
-            console.log('✓ Default user created: admin / admin123');
+        const debtorCount = db.prepare('SELECT COUNT(*) as count FROM debtors').get().count;
+        if (debtorCount === 0) {
+            console.log('Loading seed data...');
+            const seedData = require('./database_seed.json');
+            
+            // Insert users
+            for (const user of seedData.users) {
+                db.prepare('INSERT OR IGNORE INTO users (id, username, password, created_at) VALUES (?, ?, ?, ?)').run(
+                    user.id, user.username, user.password, user.created_at
+                );
+            }
+            
+            // Insert debtors
+            for (const debtor of seedData.debtors) {
+                db.prepare('INSERT OR IGNORE INTO debtors (id, uuid, user_id, name, phone, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(
+                    debtor.id, debtor.uuid, debtor.user_id, debtor.name, debtor.phone, debtor.created_at
+                );
+            }
+            
+            // Insert debts
+            for (const debt of seedData.debts) {
+                db.prepare('INSERT OR IGNORE INTO debts (id, uuid, debtor_id, description, amount, paid, remaining, created_at, user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)').run(
+                    debt.id, debt.uuid, debt.debtor_id, debt.description, debt.amount, debt.paid, debt.remaining, debt.created_at, debt.user_id
+                );
+            }
+            
+            // Insert payments
+            for (const payment of seedData.payments) {
+                db.prepare('INSERT OR IGNORE INTO payments (id, uuid, debt_id, amount, date, created_at, payment_method, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)').run(
+                    payment.id, payment.uuid, payment.debt_id, payment.amount, payment.date, payment.created_at, payment.payment_method, payment.notes
+                );
+            }
+            
+            console.log('✓ Seed data loaded successfully');
+        } else {
+            console.log('✓ Database already has data, skipping seed');
         }
     } catch (err) {
-        console.error('Error creating default user:', err.message);
+        console.error('Error loading seed data:', err.message);
     }
 }
 
