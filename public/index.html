@@ -833,7 +833,7 @@
 
         async function loadDebtors() {
             try {
-                const response = await fetch(`${API_URL}/debtors`, {
+                const response = await fetch(`${API_URL}/debtors?t=${Date.now()}`, {
                     headers: { 'Authorization': `Bearer ${authToken}` }
                 });
                 
@@ -1013,7 +1013,7 @@
             }
 
             try {
-                const response = await fetch(`${API_URL}/debtors`, {
+                const response = await fetch(`${API_URL}/debtors?t=${Date.now()}`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
